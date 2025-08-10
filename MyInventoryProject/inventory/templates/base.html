@@ -1,0 +1,64 @@
+<!doctype html><html><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Inventory{% endblock %}</title>
+  <style>
+    body{font-family:system-ui,sans-serif;margin:24px}
+    header,main{max-width:960px;margin:0 auto}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}
+    .badge{padding:2px 6px;border-radius:4px;background:#eee;font-size:12px}
+  </style>
+</head><body>
+<header>
+  <h1><a href="{% url 'inventory:product_list' %}">Inventory</a></h1>
+  <nav>
+    <a href="{% url 'inventory:product_create' %}">+ New Product</a>
+    <a href="{% url 'inventory:stock_movement_create' %}">Record Movement</a>
+    <a href="/admin/">Admin</a>
+  </nav><hr>
+</header>
+<main>
+{% if messages %}
+  <div id="messages-container">
+    {% for message in messages %}
+      <div class="message {{ message.tags }}">
+        <span class="message-text">{{ message }}</span>
+        <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<style>
+  #messages-container {
+    margin-bottom: 1rem;
+  }
+  .message {
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    position: relative;
+  }
+  .message.success { background-color: #d4edda; color: #155724; }
+  .message.info    { background-color: #d1ecf1; color: #0c5460; }
+  .message.warning { background-color: #fff3cd; color: #856404; }
+  .message.error   { background-color: #f8d7da; color: #721c24; }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    cursor: pointer;
+    color: inherit;
+  }
+  .close-btn:hover {
+    opacity: 0.7;
+  }
+</style>
+  {% block content %}{% endblock %}
+</main>
+</body></html>

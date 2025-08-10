@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<h2>Products</h2>
+
+<form method="get" style="margin-bottom:8px">
+  <input name="q" value="{{ q }}" placeholder="Search name/SKU/category/tag">
+  {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag.name }}">{% endif %}
+  <button>Search</button>
+  {% if q or active_tag %} <a href="{% url 'inventory:product_list' %}">Clear</a> {% endif %}
+</form>
+
+<div style="margin:6px 0">
+  <strong>Filter by tag:</strong>
+  <a href="{% url 'inventory:product_list' %}">All</a>
+  {% for t in all_tags %}
+    {% if active_tag and t.id == active_tag.id %}
+      <span class="badge">{{ t.name }}</span>
+    {% else %}
+      <a class="badge" href="?tag={{ t.name|urlencode }}">{{ t.name }}</a>
+    {% endif %}
+  {% empty %}
+    <em>No tags yet</em>
+  {% endfor %}
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>SKU</th><th>Name</th><th>Category</th><th>Tags</th>
+      <th>On Hand</th><th>Reorder</th><th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for p in products %}
+    <tr>
+      <td><a href="{% url 'inventory:product_detail' p.pk %}">{{ p.sku }}</a></td>
+      <td>{{ p.name }}</td>
+      <td>{{ p.category.name }}</td>
+      <td>
+        {% for t in p.tags.all %}
+          <span class="badge">{{ t.name }}</span>
+        {% empty %}
+          <span class="badge">none</span>
+        {% endfor %}
+      </td>
+      <td>{{ p.quantity_on_hand }}</td>
+      <td>{{ p.reorder_level }}</td>
+      <td>{% if p.needs_restock %}<span class="badge">Restock</span>{% else %}<span class="badge">OK</span>{% endif %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7">No products yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,24 @@
+<!doctype html><html><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Inventory{% endblock %}</title>
+  <style>
+    body{font-family:system-ui,sans-serif;margin:24px}
+    header,main{max-width:960px;margin:0 auto}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}
+    .badge{padding:2px 6px;border-radius:4px;background:#eee;font-size:12px}
+  </style>
+</head><body>
+<header>
+  <h1><a href="{% url 'inventory:product_list' %}">Inventory</a></h1>
+  <nav>
+    <a href="{% url 'inventory:product_create' %}">+ New Product</a>
+    <a href="{% url 'inventory:stock_movement_create' %}">Record Movement</a>
+    <a href="/admin/">Admin</a>
+  </nav><hr>
+</header>
+<main>
+  {% if messages %}<ul>{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body></html>

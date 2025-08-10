@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<h2>{{ product.name }}</h2>
+<p><strong>SKU:</strong> {{ product.sku }}</p>
+<p><strong>Category:</strong> {{ product.category.name }}</p>
+<p><strong>Tags:</strong>
+  {% for t in product.tags.all %}
+    <span class="badge">{{ t.name }}</span>
+  {% empty %} none {% endfor %}
+</p>
+
+<p><strong>On Hand:</strong> {{ product.quantity_on_hand }}</p>
+<p><strong>Reorder Level:</strong> {{ product.reorder_level }}</p>
+<p><strong>Status:</strong> {% if product.needs_restock %}<span class="badge">Restock</span>{% else %}<span class="badge">OK</span>{% endif %}</p>
+{% if product.image %}
+  <p><img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:300px;height:auto;"></p>
+{% endif %}
+
+<p>
+  <a href="{% url 'inventory:product_update' product.pk %}">Edit</a> |
+  <a href="{% url 'inventory:product_delete' product.pk %}">Delete</a> |
+  <a href="{% url 'inventory:stock_movement_create' %}">Record Movement</a>
+</p>
+<h3>Recent Movements</h3>
+<table>
+  <thead><tr><th>When</th><th>Type</th><th>Qty</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for m in product.movements.all|dictsortreversed:"created_at"|slice:":10" %}
+    <tr>
+      <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
+      <td>{{ m.get_move_type_display }}</td>
+      <td>{{ m.quantity }}</td>
+      <td>{{ m.note }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">No movements yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
