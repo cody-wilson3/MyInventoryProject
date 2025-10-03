@@ -1,30 +1,99 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<h2>{{ title }}</h2>
+<h2 style="margin-top:0">{{ title }}</h2>
+
 <form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.non_field_errors }}
+
   <fieldset>
-    {{ form.sku.label_tag }} {{ form.sku }} {{ form.sku.errors }}
-    {{ form.name.label_tag }} {{ form.name }} {{ form.name.errors }}
-    {{ form.category.label_tag }} {{ form.category }} {{ form.category.errors }}
-    {{ form.quantity_on_hand.label_tag }} {{ form.quantity_on_hand }} {{ form.quantity_on_hand.errors }}
-    {{ form.reorder_level.label_tag }} {{ form.reorder_level }} {{ form.reorder_level.errors }}
-    {{ form.is_active.label_tag }} {{ form.is_active }} {{ form.is_active.errors }}
-    {{ form.image.label_tag }} {{ form.image }} {{ form.image.errors }}
-  </fieldset>
-  <fieldset>
-    <legend>Tags</legend>
-    <div>{{ form.tags }}</div>
-    <div>
-      {{ form.new_tags.label_tag }} {{ form.new_tags }}
-      <div style="font-size:12px;color:#555">{{ form.new_tags.help_text }}</div>
-      {{ form.new_tags.errors }}
+    <div class="row">
+      <div>
+        <label>{{ form.sku.label }} {{ form.sku.errors }}</label>
+        {{ form.sku }}
+      </div>
+      <div>
+        <label>{{ form.name.label }} {{ form.name.errors }}</label>
+        {{ form.name }}
+      </div>
+      <div>
+        <label>{{ form.category.label }} {{ form.category.errors }}</label>
+        {{ form.category }}
+      </div>
+      <div>
+        <label>{{ form.is_active.label }} {{ form.is_active.errors }}</label>
+        {{ form.is_active }}
+      </div>
+      <div>
+        <label>{{ form.quantity_on_hand.label }} {{ form.quantity_on_hand.errors }}</label>
+        {{ form.quantity_on_hand }}
+      </div>
+      <div>
+        <label>{{ form.reorder_level.label }} {{ form.reorder_level.errors }}</label>
+        {{ form.reorder_level }}
+      </div>
+      <div>
+        <label>{{ form.price.label }} {{ form.price.errors }}</label>
+        {{ form.price }}
+      </div>
+      <div>
+        <label>
+          {{ form.website_link.label_tag }} {{ form.website_link }} {{ form.website_link.errors }}
+        </label>
+      </div>
+      <div>
+        {{ form.group_parent.label_tag }} {{ form.group_parent.errors }}
+        {{ form.group_parent }}
+        <div style="font-size:12px;color:var(--muted)">{{ form.group_parent.help_text }}</div>
+      </div>
+
+      <div>
+        {{ form.image.label_tag }}
+        {{ form.image }}
+        {% if form.image.errors %}
+          <div class="error">{{ form.image.errors }}</div>
+        {% endif %}
+
+        <div id="img-preview-wrap" style="margin-top:8px; display:none;">
+          <img id="img-preview" alt="preview"
+               style="max-width:220px; height:auto; border:1px solid var(--border); border-radius:12px;" />
+        </div>
+      </div>
+
     </div>
   </fieldset>
 
-  <button type="submit" name="save">Save</button>
-  <a href="{% url 'inventory:product_list' %}" style="margin-left:8px">Cancel</a>
+  <fieldset>
+    <legend>Tags</legend>
+    <div style="margin-bottom:8px">{{ form.tags }}</div>
+    <div>
+      <label>{{ form.new_tags.label }} {{ form.new_tags.errors }}</label>
+      {{ form.new_tags }}
+      <div style="font-size:12px;color:var(--muted)">{{ form.new_tags.help_text }}</div>
+    </div>
+  </fieldset>
+
+  <div style="display:flex; gap:8px; margin-top:6px">
+    <button type="submit" name="save" class="btn">Save</button>
+    <a href="{% url 'inventory:product_list' %}" class="btn secondary">Cancel</a>
+  </div>
 </form>
+
+<script>
+  // Live image preview
+  (function() {
+    const input = document.querySelector('input[type="file"][name="image"]');
+    if (!input) return;
+    const wrap = document.getElementById('img-preview-wrap');
+    const img = document.getElementById('img-preview');
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) { wrap.style.display = 'none'; return; }
+      const url = URL.createObjectURL(file);
+      img.src = url;
+      wrap.style.display = 'block';
+    });
+  })();
+</script>
 {% endblock %}

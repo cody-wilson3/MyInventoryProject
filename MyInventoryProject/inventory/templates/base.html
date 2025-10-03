@@ -1,64 +1,133 @@
-<!doctype html><html><head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
   <title>{% block title %}Inventory{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
-    body{font-family:system-ui,sans-serif;margin:24px}
-    header,main{max-width:960px;margin:0 auto}
-    table{width:100%;border-collapse:collapse;margin-top:16px}
-    th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}
-    .badge{padding:2px 6px;border-radius:4px;background:#eee;font-size:12px}
+    :root {
+      --bg: #0b1020;
+      --card: #121933;
+      --muted: #9aa4c7;
+      --text: #eef1ff;
+      --accent: #6ea8fe;
+      --accent-2: #a3ffac;
+      --danger: #ff7a7a;
+      --warning: #ffd36e;
+      --success: #9be49b;
+      --border: #222a4a;
+      --chip-bg: #1b244a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 80% -10%, #1c2655 0%, #0b1020 50%) no-repeat, var(--bg);
+      color: var(--text);
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    header { padding: 24px 16px 8px; border-bottom: 1px solid var(--border); }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 16px 32px; }
+    .brand { font-weight: 700; letter-spacing: .4px; }
+    nav a { margin-right: 12px; color: var(--muted); }
+    nav a:hover { color: var(--text); }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    /* Messages */
+    #messages-container { margin: 16px 0; }
+    .message {
+      position: relative;
+      padding: 12px 40px 12px 14px;
+      border-radius: 12px;
+      margin: 8px 0;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      background: #162045;
+    }
+    .message.success { border-color: #204a2a; background: #122318; color: var(--success); }
+    .message.info    { border-color: #1f3e69; background: #122238; color: #a3c9ff; }
+    .message.warning { border-color: #5a4a1a; background: #241e0d; color: var(--warning); }
+    .message.error   { border-color: #5a1f1f; background: #231214; color: var(--danger); }
+    .close-btn {
+      position: absolute; right: 8px; top: 6px; border: 0; background: transparent;
+      color: inherit; font-size: 20px; line-height: 1; cursor: pointer; opacity: .8;
+    }
+    .close-btn:hover { opacity: 1; }
+
+    /* Forms */
+    form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 760px) { form .row { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input[type=text], input[type=number], select, textarea, input[type=file] {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: #0e1533; color: var(--text); outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(110,168,254,.2); }
+    fieldset { border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 12px 0; }
+    legend { color: var(--muted); padding: 0 6px; font-size: 12px; }
+
+    /* Buttons */
+    .btn {
+      display: inline-block; padding: 10px 14px; border-radius: 10px; border: 1px solid transparent;
+      background: var(--accent); color: #0a1025; font-weight: 600; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(110,168,254,.25);
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn.secondary {
+      background: transparent; color: var(--text); border-color: var(--border);
+    }
+    .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+    thead th { color: var(--muted); font-weight: 600; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+
+    /* Chips */
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px;
+      background: var(--chip-bg); color: var(--text); border: 1px solid var(--border); margin: 0 4px 4px 0;
+    }
+    .badge.restock { background: #2a1420; color: #ff9bb8; border-color: #5a1f37; }
+    .badge.ok { background: #0f2315; color: #9be49b; border-color: #234a2a; }
   </style>
-</head><body>
+</head>
+<body>
 <header>
-  <h1><a href="{% url 'inventory:product_list' %}">Inventory</a></h1>
-  <nav>
-    <a href="{% url 'inventory:product_create' %}">+ New Product</a>
-    <a href="{% url 'inventory:stock_movement_create' %}">Record Movement</a>
-    <a href="/admin/">Admin</a>
-  </nav><hr>
-</header>
-<main>
-{% if messages %}
-  <div id="messages-container">
-    {% for message in messages %}
-      <div class="message {{ message.tags }}">
-        <span class="message-text">{{ message }}</span>
-        <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
-      </div>
-    {% endfor %}
+  <div class="container">
+    <h1 class="brand"><a href="{% url 'inventory:product_list' %}">Inventory</a></h1>
+    <nav>
+      <a href="{% url 'inventory:product_create' %}">+ New Product</a>
+      <a href="{% url 'inventory:stock_movement_create' %}">Record Movement</a>
+      <a href="/admin/">Admin</a>
+    </nav>
   </div>
-{% endif %}
+</header>
 
-<style>
-  #messages-container {
-    margin-bottom: 1rem;
-  }
-  .message {
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-    position: relative;
-  }
-  .message.success { background-color: #d4edda; color: #155724; }
-  .message.info    { background-color: #d1ecf1; color: #0c5460; }
-  .message.warning { background-color: #fff3cd; color: #856404; }
-  .message.error   { background-color: #f8d7da; color: #721c24; }
+<div class="container">
+  {% if messages %}
+    <div id="messages-container">
+      {% for message in messages %}
+        <div class="message {{ message.tags }}">
+          <span class="message-text">{{ message }}</span>
+          <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    line-height: 1;
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    cursor: pointer;
-    color: inherit;
-  }
-  .close-btn:hover {
-    opacity: 0.7;
-  }
-</style>
-  {% block content %}{% endblock %}
-</main>
-</body></html>
+  <div class="card" style="margin-top: 30px">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+</body>
+</html>

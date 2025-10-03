@@ -1,5 +1,7 @@
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -27,14 +29,42 @@ class Product(models.Model):
     reorder_level = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="products")
-    image = models.ImageField(upload_to="product_images/", blank=True, null=True)  # <-- NEW
+    image = models.ImageField(upload_to="product_images/", blank=True, null=True)
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal("0.00"))]
+    )
+    website_link = models.URLField(max_length=500, blank=True, null=True)
+    group_parent = models.ForeignKey(
+        "self",
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="group_children",
+        help_text="Optional: set this if this item belongs under another item on the main page."
+    )
 
     def __str__(self):
         return f"{self.sku} — {self.name}"
 
+    def clean(self):
+        # Disallow self-parenting
+        if self.group_parent_id and self.group_parent_id == self.id:
+            raise ValidationError({"group_parent": "An item cannot be its own group parent."})
+        # Optional: keep groups only one level deep
+        if self.group_parent and self.group_parent.group_parent_id:
+            raise ValidationError(
+                {"group_parent": "Nested groups are not allowed. Choose a header that has no parent."})
+
     @property
     def needs_restock(self):
         return self.quantity_on_hand <= self.reorder_level
+
+    @property
+    def inventory_value(self):
+        # convenience: qty * price
+        return self.quantity_on_hand * (self.price or Decimal("0.00"))
+
+
 
 
 

@@ -11,7 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("sku", "name", "category", "quantity_on_hand", "reorder_level", "is_active")
+    list_display = ("sku", "name", "category", "quantity_on_hand", "reorder_level", "price", "is_active")
     list_filter = ("category", "is_active")
     search_fields = ("sku", "name")
 
@@ -24,4 +24,6 @@ class StockMovementAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     search_fields = ("name",)
+
+
 

@@ -15,6 +15,8 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 TEMPLATES = [
     {
@@ -35,8 +37,7 @@ TEMPLATES = [
 TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]  # global templates folder
 STATIC_URL = "static/"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
 
 
 
@@ -49,7 +50,7 @@ SECRET_KEY = 'django-insecure-mew6&b7cjsf@gok%gg-!q&5c3uaorv@k1rc@43t+1was1h=cj&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.56.1', '10.0.0.69', '127.0.0.1']
 
 
 # Application definition

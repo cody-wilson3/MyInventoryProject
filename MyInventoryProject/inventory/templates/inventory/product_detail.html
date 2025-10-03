@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ product.name }}{% endblock %}
 {% block content %}
+<a href="{% url 'inventory:product_list' %}"
+   style="display:inline-block; margin-bottom:4px; padding:6px 12px; background:#f2f2f2; border:1px solid #ccc; border-radius:6px; text-decoration:none; color:#333;">
+    ← Back
+</a>
 <h2>{{ product.name }}</h2>
 <p><strong>SKU:</strong> {{ product.sku }}</p>
 <p><strong>Category:</strong> {{ product.category.name }}</p>
@@ -13,6 +17,16 @@
 <p><strong>On Hand:</strong> {{ product.quantity_on_hand }}</p>
 <p><strong>Reorder Level:</strong> {{ product.reorder_level }}</p>
 <p><strong>Status:</strong> {% if product.needs_restock %}<span class="badge">Restock</span>{% else %}<span class="badge">OK</span>{% endif %}</p>
+<p><strong>Price:</strong> ${{ product.price|floatformat:2 }}</p>
+<p><strong>Total Value:</strong> ${{ product.inventory_value|floatformat:2 }}</p>
+{% if product.website_link %}
+  <p><strong>Website:</strong>
+    <a href="{{ product.website_link }}" target="_blank" rel="noopener">
+      {{ product.website_link }}
+    </a>
+  </p>
+{% endif %}
+
 {% if product.image %}
   <p><img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:300px;height:auto;"></p>
 {% endif %}

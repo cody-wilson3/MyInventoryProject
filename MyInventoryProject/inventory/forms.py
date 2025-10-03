@@ -18,8 +18,20 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = [
             "sku", "name", "category", "quantity_on_hand",
-            "reorder_level", "is_active", "tags", "image"  # <-- add image here
+            "reorder_level", "is_active", "tags", "image", "price", "website_link", "group_parent"
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Don’t allow selecting self as parent
+        qs = Product.objects.all()
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        # Optional: only allow headers (items without a parent) to be selectable as parents
+        self.fields["group_parent"].queryset = qs.filter(group_parent__isnull=True)
+        self.fields["group_parent"].required = False
+        self.fields["group_parent"].label = "Group parent"
+        self.fields["group_parent"].help_text = "Leave blank if this is the header item."
 
     def save(self, commit=True):
         product = super().save(commit=commit)

@@ -1,64 +1,137 @@
 {% extends "base.html" %}
+{% load inventory_extras %}
 {% block title %}Products{% endblock %}
 {% block content %}
-<h2>Products</h2>
+<h2 style="margin-top:0">Products</h2>
 
 <form method="get" style="margin-bottom:8px">
   <input name="q" value="{{ q }}" placeholder="Search name/SKU/category/tag">
   {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag.name }}">{% endif %}
   <button>Search</button>
-  {% if q or active_tag %}<a href="{% url 'inventory:product_list' %}">Clear</a>{% endif %}
+  {% if q or active_tag %} <a href="{% url 'inventory:product_list' %}" class="btn secondary" style="padding:6px 10px">Clear</a> {% endif %}
 </form>
 
-<div>
+<div class="filter-tags" style="margin-bottom:12px">
   <strong>Filter by tag:</strong>
   <a href="{% url 'inventory:product_list' %}">All</a>
   {% for t in all_tags %}
     {% if active_tag and t.id == active_tag.id %}
       <span class="badge">{{ t.name }}</span>
     {% else %}
-      <a class="badge" href="?tag={{ t.name|urlencode }}">{{ t.name }}</a>
+      <a class="badge" href="?tag={{ t.name|urlencode }}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ t.name }}</a>
     {% endif %}
-  {% empty %}
-    <em>No tags yet</em>
-  {% endfor %}
+  {% empty %}<em>No tags yet</em>{% endfor %}
 </div>
 
-<table>
-  <thead>
+{# --- Standalone items (no group) render as a normal table --- #}
+{% if standalone %}
+  <h3 style="margin:14px 0 6px">Items</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>SKU</th><th>Name</th><th>Category</th><th>Tags</th>
+        <th>On Hand</th><th>Reorder</th><th>Price</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in standalone %}
+      <tr>
+        <td>{% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">{% else %} — {% endif %}</td>
+        <td><a href="{% url 'inventory:product_detail' p.pk %}">{{ p.sku }}</a></td>
+        <td>{{ p.name }}{% if p.website_link %} &nbsp;<a href="{{ p.website_link }}" target="_blank" rel="noopener">🔗</a>{% endif %}</td>
+        <td>{{ p.category.name }}</td>
+        <td>{% for t in p.tags.all %}<span class="badge">{{ t.name }}</span>{% empty %}<span class="badge">none</span>{% endfor %}</td>
+        <td>{{ p.quantity_on_hand }}</td>
+        <td>{{ p.reorder_level }}</td>
+        <td>${{ p.price|floatformat:2 }}</td>
+        <td>{% if p.needs_restock %}<span class="badge restock">Restock</span>{% else %}<span class="badge ok">OK</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
     <tr>
-      <th>SKU</th><th>Name</th><th>Category</th>
-      <th>Tags</th><th>On Hand</th><th>Reorder</th><th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for p in products %}
-    <tr>
-      <td><a href="{% url 'inventory:product_detail' p.pk %}">{{ p.sku }}</a></td>
-      <td>{{ p.name }}</td>
-      <td>{{ p.category.name }}</td>
-      <td>
-        {% for t in p.tags.all %}
-          <span class="badge">{{ t.name }}</span>
-        {% empty %}
-          <span class="badge">none</span>
-        {% endfor %}
-      </td>
-      <td>{{ p.quantity_on_hand }}</td>
-      <td>{{ p.reorder_level }}</td>
-      <td>{% if p.needs_restock %}<span class="badge">Restock</span>{% else %}<span class="badge">OK</span>{% endif %}</td>
-      <td>
-  {% if p.image %}
-    <img src="{{ p.image.url }}" alt="{{ p.name }}" style="max-width:80px;height:auto;">
-  {% else %}
-    <span class="badge">No image</span>
-  {% endif %}
-</td>
+  <td colspan="7" style="text-align:right; font-weight:bold;">Total:</td>
+  <td style="font-weight:bold;">${{ standalone_total|floatformat:2 }}</td>
+  <td></td>
+</tr>
 
-    </tr>
-    {% empty %}
-      <tr><td colspan="7">No products yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </tbody>
+  </table>
+{% endif %}
+
+{# --- Headers with children render as collapsible sections --- #}
+{% if headers_with_children %}
+  <h3 style="margin:18px 0 6px">Groups</h3>
+  <div style="display:flex; gap:8px; margin:6px 0 10px">
+    <button class="btn secondary" type="button" onclick="document.querySelectorAll('details.group').forEach(d => d.open = true)">Expand all</button>
+    <button class="btn secondary" type="button" onclick="document.querySelectorAll('details.group').forEach(d => d.open = false)">Collapse all</button>
+  </div>
+
+  {% for p in headers_with_children %}
+    <details class="card group" style="margin-bottom:10px" {% if forloop.first %}open{% endif %}>
+      <summary style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600">
+        {% if p.image %}
+          <img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:42px;height:42px;object-fit:cover;border-radius:6px;">
+        {% endif %}
+        <span>{{ p.name }}</span>
+        <span style="color:var(--muted)">· {{ p.sku }}</span>
+        {% if p.needs_restock %}<span class="badge restock">Restock</span>{% else %}<span class="badge ok">OK</span>{% endif %}
+        <span style="margin-left:auto; color:var(--muted)">{{ children_map|get_item:p.id|length }} related</span>
+      </summary>
+
+      <div style="margin-top:10px">
+        <table>
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>SKU</th><th>Name</th><th>Category</th><th>Tags</th>
+              <th>On Hand</th><th>Reorder</th><th>Price</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {# Header as first row #}
+            <tr>
+              <td>{% if p.image %}<img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">{% else %} — {% endif %}</td>
+              <td><a href="{% url 'inventory:product_detail' p.pk %}">{{ p.sku }}</a></td>
+              <td><strong>{{ p.name }}</strong>{% if p.website_link %} &nbsp;<a href="{{ p.website_link }}" target="_blank" rel="noopener">🔗</a>{% endif %}</td>
+              <td>{{ p.category.name }}</td>
+              <td>{% for t in p.tags.all %}<span class="badge">{{ t.name }}</span>{% empty %}<span class="badge">none</span>{% endfor %}</td>
+              <td>{{ p.quantity_on_hand }}</td>
+              <td>{{ p.reorder_level }}</td>
+              <td>${{ p.price|floatformat:2 }}</td>
+              <td>{% if p.needs_restock %}<span class="badge restock">Restock</span>{% else %}<span class="badge ok">OK</span>{% endif %}</td>
+            </tr>
+
+            {# Children rows #}
+            {% for c in children_map|get_item:p.id %}
+            <tr>
+              <td>{% if c.image %}<img src="{{ c.image.url }}" alt="{{ c.name }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">{% else %} — {% endif %}</td>
+              <td><a href="{% url 'inventory:product_detail' c.pk %}">{{ c.sku }}</a></td>
+              <td>{{ c.name }}{% if c.website_link %} &nbsp;<a href="{{ c.website_link }}" target="_blank" rel="noopener">🔗</a>{% endif %}</td>
+              <td>{{ c.category.name }}</td>
+              <td>{% for t in c.tags.all %}<span class="badge">{{ t.name }}</span>{% empty %}<span class="badge">none</span>{% endfor %}</td>
+              <td>{{ c.quantity_on_hand }}</td>
+              <td>{{ c.reorder_level }}</td>
+              <td>${{ c.price|floatformat:2 }}</td>
+              <td>{% if c.needs_restock %}<span class="badge restock">Restock</span>{% else %}<span class="badge ok">OK</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          <tr>
+  <td colspan="7" style="text-align:right; font-weight:bold;">Group total:</td>
+  <td style="font-weight:bold;">${{ group_totals|get_item:p.id|floatformat:2 }}</td>
+  <td></td>
+</tr>
+
+          </tbody>
+        </table>
+      </div>
+    </details>
+  {% endfor %}
+{% endif %}
+<hr style="margin:14px 0; border-color: var(--border);">
+<div style="text-align:right; font-weight:700;">
+  Grand Total (Price): ${{ grand_total|floatformat:2 }}
+</div>
+
+
+
 {% endblock %}
