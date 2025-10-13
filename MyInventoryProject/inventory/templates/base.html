@@ -1,44 +1,51 @@
 <!doctype html>
+{% load static %}
 <html>
 <head>
   <meta charset="utf-8">
   <title>{% block title %}Inventory{% endblock %}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <!-- Replace your viewport with this -->
+<meta name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- Optional: make it feel more app-like when saved to Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="{% static 'inventory/style.css' %}">
   <style>
     :root {
-      --bg: #0b1020;
-      --card: #121933;
-      --muted: #9aa4c7;
-      --text: #eef1ff;
-      --accent: #6ea8fe;
-      --accent-2: #a3ffac;
-      --danger: #ff7a7a;
-      --warning: #ffd36e;
-      --success: #9be49b;
-      --border: #222a4a;
-      --chip-bg: #1b244a;
+      --bg: #f9fafc;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --text: #1f2937;
+      --accent: #2563eb;
+      --accent-2: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --success: #16a34a;
+      --border: #e5e7eb;
+      --chip-bg: #f3f4f6;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 800px at 80% -10%, #1c2655 0%, #0b1020 50%) no-repeat, var(--bg);
+      background: var(--bg);
       color: var(--text);
     }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    header { padding: 24px 16px 8px; border-bottom: 1px solid var(--border); }
-    .container { max-width: 1040px; margin: 0 auto; padding: 0 16px 32px; }
+    header { padding: 24px 16px 8px; border-bottom: 1px solid var(--border); background: #fff; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 16px 0px; }
     .brand { font-weight: 700; letter-spacing: .4px; }
     nav a { margin-right: 12px; color: var(--muted); }
     nav a:hover { color: var(--text); }
 
     .card {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      box-shadow: 0 4px 20px rgba(0,0,0,.08);
     }
 
     /* Messages */
@@ -50,15 +57,15 @@
       margin: 8px 0;
       font-size: 14px;
       border: 1px solid var(--border);
-      background: #162045;
+      background: #f9fafb;
     }
-    .message.success { border-color: #204a2a; background: #122318; color: var(--success); }
-    .message.info    { border-color: #1f3e69; background: #122238; color: #a3c9ff; }
-    .message.warning { border-color: #5a4a1a; background: #241e0d; color: var(--warning); }
-    .message.error   { border-color: #5a1f1f; background: #231214; color: var(--danger); }
+    .message.success { border-color: #bbf7d0; background: #ecfdf5; color: var(--success); }
+    .message.info    { border-color: #bfdbfe; background: #eff6ff; color: #2563eb; }
+    .message.warning { border-color: #fde68a; background: #fffbeb; color: var(--warning); }
+    .message.error   { border-color: #fecaca; background: #fef2f2; color: var(--danger); }
     .close-btn {
       position: absolute; right: 8px; top: 6px; border: 0; background: transparent;
-      color: inherit; font-size: 20px; line-height: 1; cursor: pointer; opacity: .8;
+      color: inherit; font-size: 20px; line-height: 1; cursor: pointer; opacity: .6;
     }
     .close-btn:hover { opacity: 1; }
 
@@ -68,17 +75,17 @@
     label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
     input[type=text], input[type=number], select, textarea, input[type=file] {
       width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
-      background: #0e1533; color: var(--text); outline: none;
+      background: #fff; color: var(--text); outline: none;
     }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(110,168,254,.2); }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.2); }
     fieldset { border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 12px 0; }
     legend { color: var(--muted); padding: 0 6px; font-size: 12px; }
 
     /* Buttons */
     .btn {
       display: inline-block; padding: 10px 14px; border-radius: 10px; border: 1px solid transparent;
-      background: var(--accent); color: #0a1025; font-weight: 600; cursor: pointer;
-      box-shadow: 0 6px 20px rgba(110,168,254,.25);
+      background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37,99,235,.25);
     }
     .btn:hover { filter: brightness(1.05); }
     .btn.secondary {
@@ -87,18 +94,49 @@
     .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Table */
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
     thead th { color: var(--muted); font-weight: 600; }
-    tbody tr:hover { background: rgba(255,255,255,.03); }
+    tbody tr:hover { background: #f9fafb; }
 
     /* Chips */
     .badge {
       display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px;
       background: var(--chip-bg); color: var(--text); border: 1px solid var(--border); margin: 0 4px 4px 0;
     }
-    .badge.restock { background: #2a1420; color: #ff9bb8; border-color: #5a1f37; }
-    .badge.ok { background: #0f2315; color: #9be49b; border-color: #234a2a; }
+    .badge.restock { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .badge.ok { background: #ecfdf5; color: #16a34a; border-color: #bbf7d0; }
+
+    /* Make the inner table size to its content so it can overflow */
+.table-scroll {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll > table {
+  width: max-content !important;   /* override global table { width:100% } */
+  min-width: 920px;                /* adjust for your columns */
+  table-layout: auto;
+}
+
+/* Stop columns from wrapping so width grows horizontally */
+.table-scroll th,
+.table-scroll td {
+  white-space: nowrap;
+}
+
+/* If any ancestor is a flex item, ensure it can shrink */
+.table-scroll,
+details.group,
+.container,
+.content {
+  min-width: 0;
+}
+
+/* If you had .card { overflow: hidden; } elsewhere, let the scroller show */
+.card.group { overflow: visible; }
+
   </style>
 </head>
 <body>
@@ -125,9 +163,136 @@
     </div>
   {% endif %}
 
-  <div class="card" style="margin-top: 30px">
+  <div class="card" style="margin-top: 10px">
     {% block content %}{% endblock %}
   </div>
 </div>
+<script>
+(() => {
+  const btn = document.getElementById('tag-filter-btn');
+  const pop = document.getElementById('tag-popover');
+  const card = btn?.closest('.card');
+  if (!btn || !pop) return;
+
+  const open = () => {
+    pop.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    card?.classList.add('popover-open');
+  };
+  const close = () => {
+    pop.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    card?.classList.remove('popover-open');
+  };
+
+  btn.addEventListener('click', (e) => { e.preventDefault(); pop.hidden ? open() : close(); });
+  pop.querySelector('.close-btn')?.addEventListener('click', close);
+  document.addEventListener('click', (e) => {
+    if (pop.hidden) return;
+    if (!e.target.closest('.search-row') && !e.target.closest('#tag-popover')) close();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
+
+/**
+ * Sorts table rows based on the selected field and direction.
+ * Currently supports only `price`. You can extend this mapping to
+ * support other fields like name, quantity, etc.
+ *
+ * @param {string} field     The field to sort by (e.g. 'price').
+ * @param {string} direction 'asc' for ascending or 'desc' for descending.
+ */
+function applySorting(field, direction) {
+  const dir = direction === 'desc' ? 'desc' : 'asc';
+
+  // Sorting by price
+  if (field === 'price') {
+    // For each table on the page, reorder the tbody rows
+    document.querySelectorAll('table').forEach((table) => {
+      const tbody = table.tBodies[0];
+      if (!tbody) return;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      if (rows.length < 2) return;
+
+      const priceIndex = 7; // 8th column holds price
+      rows.sort((a, b) => {
+        const parsePrice = (cell) => {
+          const text = cell?.textContent || '';
+          const match = text.match(/([0-9]+(?:\.[0-9]+)?)/);
+          return match ? parseFloat(match[1]) : 0;
+        };
+        const priceA = parsePrice(a.cells[priceIndex]);
+        const priceB = parsePrice(b.cells[priceIndex]);
+        return dir === 'asc' ? priceA - priceB : priceB - priceA;
+      });
+
+      rows.forEach((row) => tbody.appendChild(row));
+    });
+  }
+
+  else if (field === 'name') {
+    document.querySelectorAll('table').forEach((table) => {
+      const tbody = table.tBodies[0];
+      if (!tbody) return;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      if (rows.length < 2) return;
+      const nameIndex = 2; // 3rd column
+      rows.sort((a, b) => {
+        const nameA = (a.cells[nameIndex]?.textContent || '').trim().toLowerCase();
+        const nameB = (b.cells[nameIndex]?.textContent || '').trim().toLowerCase();
+        if (nameA === nameB) return 0;
+        return dir === 'asc'
+          ? (nameA > nameB ? 1 : -1)
+          : (nameA < nameB ? 1 : -1);
+      });
+      rows.forEach((row) => tbody.appendChild(row));
+    });
+  }
+}
+
+
+// Sort popover toggle
+(() => {
+  const btn = document.getElementById('sort-btn');
+  const pop = document.getElementById('sort-popover');
+  const card = btn?.closest('.card');
+  if (!btn || !pop) return;
+
+  const open = () => {
+    pop.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    card?.classList.add('popover-open');
+  };
+  const close = () => {
+    pop.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+    card?.classList.remove('popover-open');
+  };
+
+  btn.addEventListener('click', (e) => { e.preventDefault(); pop.hidden ? open() : close(); });
+
+
+  // When clicking Done: read the chosen sort field and direction,
+  // apply sorting, then close the popover
+  const doneBtn = pop.querySelector('.done-btn');
+  doneBtn?.addEventListener('click', () => {
+    const sortField = pop.querySelector('input[name="sort"]:checked')?.value || '';
+    const direction = pop.querySelector('input[name="direction"]:checked')?.value || 'asc';
+    applySorting(sortField, direction);
+    close();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (pop.hidden) return;
+    if (!e.target.closest('.search-row') && !e.target.closest('#sort-popover')) close();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
+</script>
+
+
+
+
+
 </body>
 </html>

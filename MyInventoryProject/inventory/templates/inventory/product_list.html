@@ -1,32 +1,154 @@
 {% extends "base.html" %}
 {% load inventory_extras %}
+{% load static %}
 {% block title %}Products{% endblock %}
 {% block content %}
-<h2 style="margin-top:0">Products</h2>
 
-<form method="get" style="margin-bottom:8px">
-  <input name="q" value="{{ q }}" placeholder="Search name/SKU/category/tag">
-  {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag.name }}">{% endif %}
-  <button>Search</button>
-  {% if q or active_tag %} <a href="{% url 'inventory:product_list' %}" class="btn secondary" style="padding:6px 10px">Clear</a> {% endif %}
+<div class="header-row">
+  <div class="kpi">
+    <span class="kpi-label">Grand Total (Price)</span>
+    <span class="kpi-value">${{ grand_total|floatformat:2 }}</span>
+  </div>
+</div>
+
+
+
+<form method="get" class="search-row">
+  <div class="search-input-wrap">
+    <input name="q" value="{{ q }}" placeholder="Search name/SKU/category/tag" autofocus>
+    {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag.name }}">{% endif %}
+  </div>
+
+  <button id="tag-filter-btn"
+          class="icon-btn{% if active_tag %} is-active{% endif %}"
+          type="button"
+          aria-label="Filter by tag"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="tag-popover">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="currentColor"/>
+    </svg>
+  </button>
+
+<button id="sort-btn"
+        class="icon-btn"
+        type="button"
+        aria-label="Sort products">
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    {# Up and down arrows to represent sorting #}
+    <path d="M7 10l5-5 5 5zM17 14l-5 5-5-5z" fill="currentColor" />
+  </svg>
+</button>
+
+
+
+  {# ← POPUP LIVES INSIDE THE ROW NOW #}
+  <div id="tag-popover" class="filter-popover" role="dialog" hidden>
+    <div class="filter-popover-header">
+      <strong>Tags</strong>
+      <button class="close-btn" type="button" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="tag-list">
+      <a class="badge" href="{% url 'inventory:product_list' %}{% if q %}?q={{ q|urlencode }}{% endif %}">All</a>
+      {% for t in all_tags %}
+        {% if active_tag and t.id == active_tag.id %}
+          <span class="badge active">{{ t.name }}</span>
+        {% else %}
+          <a class="badge" href="?tag={{ t.name|urlencode }}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ t.name }}</a>
+        {% endif %}
+      {% empty %}<em>No tags yet</em>{% endfor %}
+    </div>
+  </div>
+  <div id="sort-popover" class="filter-popover sort-popover" role="dialog" hidden>
+  <div class="sort-section">
+    <strong class="section-title">Sort by</strong>
+    <label class="sort-option">
+      <input type="radio" name="sort" value="updated" checked>
+      <span>Last updated</span>
+    </label>
+    <label class="sort-option">
+      <input type="radio" name="sort" value="name">
+      <span>Name</span>
+    </label>
+    <label class="sort-option">
+      <input type="radio" name="sort" value="quantity">
+      <span>Quantity</span>
+    </label>
+    <label class="sort-option">
+      <input type="radio" name="sort" value="price">
+      <span>Price</span>
+    </label>
+  </div>
+  <div class="sort-section" style="margin-top:12px;">
+    <strong class="section-title">Direction</strong>
+    <label class="sort-option">
+      <input type="radio" name="direction" value="asc">
+      <span>Ascending</span>
+    </label>
+    <label class="sort-option">
+      <input type="radio" name="direction" value="desc" checked>
+      <span>Descending</span>
+    </label>
+  </div>
+  <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+    <button type="button" class="btn secondary done-btn">Done</button>
+  </div>
+</div>
+
 </form>
 
-<div class="filter-tags" style="margin-bottom:12px">
-  <strong>Filter by tag:</strong>
-  <a href="{% url 'inventory:product_list' %}">All</a>
-  {% for t in all_tags %}
-    {% if active_tag and t.id == active_tag.id %}
-      <span class="badge">{{ t.name }}</span>
-    {% else %}
-      <a class="badge" href="?tag={{ t.name|urlencode }}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ t.name }}</a>
-    {% endif %}
-  {% empty %}<em>No tags yet</em>{% endfor %}
+{% if active_tag %}
+  <div class="tag-list">
+    <span class="badge active">{{ active_tag.name }}</span>
+      {% if q or active_tag %}
+    <a href="{% url 'inventory:product_list' %}" class="btn secondary clear-btn">Clear</a>
+  {% endif %}
+  </div>
+
+{% endif %}
+
 </div>
+
 
 {# --- Standalone items (no group) render as a normal table --- #}
 {% if standalone %}
   <h3 style="margin:14px 0 6px">Items</h3>
-  <table>
+
+
+{# MOBILE PREVIEW LIST (shows only on small screens) #}
+<div class="mobile-previews" aria-label="Inventory previews">
+  {% for product in standalone %}
+    <a class="preview-card"
+       href="{% url 'inventory:product_detail' product.id %}"
+       title="{{ product.name }}">
+      {% if product.image %}
+        <img class="preview-thumb" src="{{ product.image.url }}" alt="{{ product.name }}">
+      {% else %}
+        <img class="preview-thumb" src="{% static 'inventory/placeholder.png' %}" alt="No image">
+      {% endif %}
+
+      <div class="preview-main">
+        <div class="preview-top">
+          <span class="preview-sku">{{ product.sku }}</span>
+          <span class="preview-price">
+            {% if product.price %}${{ product.price }}{% else %}—{% endif %}
+          </span>
+        </div>
+        <div class="preview-sub">{{ product.name }}</div>
+      </div>
+    </a>
+  {% empty %}
+    <p class="preview-empty">No products found.</p>
+  {% endfor %}
+</div>
+
+
+
+
+<div class="desktop-table">
+  <table class="product-table">
     <thead>
       <tr>
         <th>Image</th>
@@ -56,6 +178,7 @@
 
     </tbody>
   </table>
+</div>
 {% endif %}
 
 {# --- Headers with children render as collapsible sections --- #}
@@ -67,7 +190,7 @@
   </div>
 
   {% for p in headers_with_children %}
-    <details class="card group" style="margin-bottom:10px" {% if forloop.first %}open{% endif %}>
+    <details class="card group" style="margin-bottom:30px" >
       <summary style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600">
         {% if p.image %}
           <img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:42px;height:42px;object-fit:cover;border-radius:6px;">
@@ -78,8 +201,8 @@
         <span style="margin-left:auto; color:var(--muted)">{{ children_map|get_item:p.id|length }} related</span>
       </summary>
 
-      <div style="margin-top:10px">
-        <table>
+      <div class="table-scroll" style="margin-top:10px">
+        <table class="product-table">
           <thead>
             <tr>
               <th>Image</th>
@@ -127,10 +250,6 @@
     </details>
   {% endfor %}
 {% endif %}
-<hr style="margin:14px 0; border-color: var(--border);">
-<div style="text-align:right; font-weight:700;">
-  Grand Total (Price): ${{ grand_total|floatformat:2 }}
-</div>
 
 
 
